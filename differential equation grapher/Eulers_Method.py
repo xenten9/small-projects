@@ -38,7 +38,7 @@ class DifferentialEquation():
             z.append((x0, y0))
         return z
 
-# Function
+# Differential function
 def func(x: float, y: float) -> float:
     return (x-y**2) / y
 
