@@ -1,36 +1,34 @@
-# Differential_Equation_Grapher.py
-from PIL.Image import new as newimg
-from math import sin, cos
-from math import ceil, floor, atan, e, pi, inf
-from numpy import linspace, sign
-from matplotlib import pyplot as plot
+# Standard Library
+from inspect import getsource
+from math import atan, ceil, cos, e, floor, inf, nan, pi, sin
+from typing import Tuple
 
-func = "arctan(x + y) + sin(x) + cos(y)"
+# External Libraries
+from matplotlib import pyplot as plot
+from numpy import linspace, sign
+from PIL.Image import new as newimg
+
+
+# Differential Equation
 def f(x: float, y: float) -> float:
     try:
-        return atan(x + y) + sin(x) + cos(y)
-    except (ZeroDivisionError, ValueError):
+        #out = atan(x + y) + sin(x) + cos(y)
+        out = (x-y**2) / y
+    except (ZeroDivisionError, ValueError, RuntimeWarning):
         # Domain error
-        return inf
+        out = inf
+    return out
 
-def diff(x: float, y: float) -> float:
-    # Find the value given (x, y)
-    z = f(x, y)
 
-    # Check if the value had a domain error
-    if z == inf:
-        return inf
-
+# Converters
+def compress(v: float) -> float:
     # Map from (-inf, inf) -> (-1, 1)
-    z = (2 * atan(z)) / pi # faster
-    #z = 2/(1+exp(-z)) - 1 # slower
-
-    return z
+    if v == inf:
+        return inf
+    return (2 * atan(v)) / pi # faster
+    #return 2/(1+exp(-v)) - 1 # slower
 
 def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
-    if v == inf:
-        return c_inf
-
     if -1 <= v <= 1:
         # Map from (-1, 1) to [0, 255]
         new_v = int(abs(255 * v))
@@ -47,19 +45,16 @@ def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
             blue = floor(c_pos[2] * new_v)
         return (red, green, blue)
     else:
-        print('value: {}'.format(v))
-        raise ValueError('value must be in range (-1, 1)')
+        return c_inf
 
-def make_domain(domain: tuple, interval: float) -> list:
-    # Make a list of x values
-    z = list(range(floor(domain[0] / interval), ceil(domain[1] / interval), 1))
-    z = [element * interval for element in z]
-    q = []
-    for element in z:
-        if (domain[0] < element < domain[1]):
-            q.append(element)
-    return q
+def convert_to_rgb(color: Tuple[float, float, float]) -> tuple:
+    red = ceil(color[0] * 255)
+    green = ceil(color[1] * 255)
+    blue = ceil(color[2] * 255)
+    return (red, green, blue)
 
+
+# Euler methods
 def eulers_method(pos: tuple, dx: float) -> tuple:
     # Approximate new position given an initial position and dx
     pos = (pos[0] + dx, pos[1] + dx * f(pos[0], pos[1]))
@@ -111,19 +106,27 @@ def create_euler_line(pos: tuple, dx: float, h_bounds: tuple,
 
     return output
 
+
+# Helper functions
+def make_domain(domain: tuple, interval: float) -> list:
+    # Make a list of x values
+    z = list(range(floor(domain[0] / interval), ceil(domain[1] / interval), 1))
+    z = [element * interval for element in z]
+    q = []
+    for element in z:
+        if (domain[0] < element < domain[1]):
+            q.append(element)
+    return q
+
 def spow(x: float, n: float) -> float:
     x = abs(x)**n * sign(x)
     return x
 
-def convert_to_rgb(color: tuple) -> tuple:
-    red = ceil(color[0] * 255)
-    green = ceil(color[1] * 255)
-    blue = ceil(color[2] * 255)
-    return (red, green, blue)
 
+# Main
 def main():
     # Setup
-    accuracy = 3
+    accuracy = 2
     size = (ceil((8 * pi) * e**accuracy), ceil((8 * pi) * e**accuracy))
     majspacing = pi
     hbounds = (-8 * pi, 8 * pi)
@@ -141,7 +144,6 @@ def main():
     c_neg = (1, 0.1, 0.1)
     c_inf = convert_to_rgb((1, 0.2, 1))
     c_euler = (0.25, 0.25, 1)
-    cfactor = 1
 
     # Euler line
     pos = (1, 1)
@@ -151,43 +153,53 @@ def main():
     # Image
     de_image = newimg("RGB", size, "#ffffff")
 
-    # iterate over image
+    # Iterate over image
     for y in range(0, size[1]):
         #print("y: " + str(y))
         for x in range(0, size[0]):
-            v = diff(hpoints[x], vpoints[y])
+            v = compress(f(hpoints[x], vpoints[y]))
             de_image.putpixel((x, -(y + 1)), value_to_rgb(v, c_neg, c_pos, c_inf))
     print("Image Created")
 
-    # setup plot
+    # Setup plot
     fig = plot.figure()
     ax = fig.add_subplot()
 
-    # plot image
+    # Plot image
     ax.imshow(de_image, extent = (hbounds[0], hbounds[1], vbounds[0], vbounds[1]))
 
-    # plot major ticks
+    # Plot major ticks
     ax.set_xticks(hmajlines)
     ax.set_yticks(vmajlines)
     ax.grid(True, which = "major", c = c_major)
 
-    # origin lines
+    # Origin lines
     ax.axhline(0, c = (1, 1, 1))
     ax.axvline(0, c = (1, 1, 1))
 
-    # labels
+    # Get function definition
+    func_string = getsource(f)
+    split = func_string.split('\n')
+    for part in split:
+        if 'return ' in part and 'inf' not in part:
+            part = part.replace('    ', '')
+            part = part.removeprefix('return ')
+            part = part.replace('**', '^')
+            func_string = part
+
+    # Labels
     ax.set_xlabel('x axis')
     ax.set_ylabel('y axis')
-    ax.set_title("Slope Field of f(x, y) = " + func)
-    euler_line = create_euler_line(pos, dx, hbounds, vbounds, iterlimit)
+    ax.set_title("Slope Field of f(x, y) = " + func_string)
 
+    # Creat euler line
+    euler_line = create_euler_line(pos, dx, hbounds, vbounds, iterlimit)
     print("Euler line created")
     ax.plot(euler_line['x'], euler_line['y'], color = c_euler,
             label = "Trends starting at: " + str(pos))
 
+    # Finish plotting
     plot.legend()
-
-    # display graph
     plot.show()
 
 if __name__ == '__main__':
