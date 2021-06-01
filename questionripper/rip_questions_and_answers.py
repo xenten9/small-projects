@@ -12,7 +12,7 @@ def main():
     lines = file.readlines()
     file.close()
 
-    # Remove book markers
+    # Remove keywords markers
     new_lines = []
     for line in lines:
         if any(keyword in line for keyword in keywords):
