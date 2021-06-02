@@ -1,5 +1,4 @@
 # Standard Library
-#from math import cos, sin
 from inspect import getsource
 from typing import Callable, List, Tuple
 
@@ -40,15 +39,16 @@ class DifferentialEquation():
 
 # Differential function
 def func(x: float, y: float) -> float:
-    return (x-y**2) / y
+    from math import log as ln
+    return y*(x*ln(x))
 
 
 # Main
 def main():
     # Inputs
-    x0, y0 = 0, 1
-    x1 = 1
-    iter_count = 128
+    x0, y0 = 1, 4
+    x1 = 2
+    iter_count = 10000000
 
 
     # Solve
@@ -57,9 +57,10 @@ def main():
 
 
     # Print results
-    print('Function dy/dx = {}\n'.format(de))
-    print('Initial  (x0, y0): ({:.3f}, {:.3f})'.format(*z[0]))
-    print('Final    (x1, y1): ({:.3f}, {:.3f})'.format(*z[-1]))
+    print( 'Function dy/dx = {}\n'.format(de))
+    print( 'Initial  (x0, y0): ({:.3f}, {:.3f})'.format(*z[0]))
+    print( 'Final    (x1, y1): ({:.3f}, {:.3f})'.format(*z[-1]))
+    print(f'Final y value    : {z[-1][1]}')
 
 if __name__ == '__main__':
     main()
