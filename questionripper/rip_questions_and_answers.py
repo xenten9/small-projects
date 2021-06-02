@@ -27,7 +27,7 @@ def main():
 
     # Split by answer
     for question in questions:
-        questions_and_answers.append(re.split(r"\n[a-z]+\.\s", question))
+        questions_and_answers.append(re.split(r"\n[a-z]\.\s", question))
     del questions_and_answers[0]
 
     for i in range(len(questions_and_answers)):
