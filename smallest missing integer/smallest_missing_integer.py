@@ -6,10 +6,10 @@ from typing import List
 
 # Generator of list
 def random_list(len: int) -> List[int]:
-    return [random.randint(0, 500) for _ in range(len)]
+    return [random.randint(0, 101) for _ in range(len)]
 
 
-# Methods
+# Method 0
 def smallest_missing_int0(nums: List[int]) -> int:
     a = set(range(1, len(nums) + 1))
     for num in nums:
@@ -18,6 +18,8 @@ def smallest_missing_int0(nums: List[int]) -> int:
         return len(nums) + 1
     return min(a)
 
+
+# Method 1
 def smallest_missing_int1(nums: List[int]) -> int:
     a = set(range(1, len(nums) + 1))
     for num in a:
@@ -28,22 +30,30 @@ def smallest_missing_int1(nums: List[int]) -> int:
 
 # Main
 def main():
-    b: List[List[int]] = []
+    # Generate list of random lists
+    random_list_list: List[List[int]] = []
     for _ in range(500):
-        b.append(random_list(10))
+        random_list_list.append(random_list(100))
 
-    c: List[float] = []
+    # Method 0
+    time_total: float = 0.0
     t = time()
     for _ in range(100):
-        for n, _ in enumerate(b):
-            b[n] += random_list(10)
-        for a in range(len(b)):
-            smallest_missing_int0(b[a])
-        c.append(round(time()-t, 2))
         t = time()
-    print(c)
-    print(sum(c))
+        for list_index in range(len(random_list_list)):
+            smallest_missing_int0(random_list_list[list_index])
+        time_total += time() - t
+    print(f"Total time for method 0: {time_total}")
 
-if __name__ == '__main__':
+    # Method 1
+    time_total = 0.0
+    for _ in range(100):
+        t = time()
+        for list_index in range(len(random_list_list)):
+            smallest_missing_int1(random_list_list[list_index])
+        time_total += time() - t
+    print(f"Total time for method 1: {time_total}")
+
+
+if __name__ == "__main__":
     main()
-

@@ -5,6 +5,8 @@ from typing import Callable, List, Tuple
 
 # Differential equation class
 class DifferentialEquation:
+    """Class which continas a differential equation f and some useful methods."""
+
     def __init__(self, f: Callable[[float, float], float]):
         self.f = f
 
@@ -23,11 +25,12 @@ class DifferentialEquation:
     def eulers_method(
         self, x0: float, x1: float, y0: float, dx: float = None, iter: int = None
     ) -> List[Tuple[float, float]]:
+        """Returns a list of points from eulers method."""
         if isinstance(dx, float):
             iter = round((x1 - x0) / dx)
         if isinstance(iter, int):
             dx = (x1 - x0) / iter
-        if dx is None or iter is None:
+        if not dx and not iter:
             raise ValueError("either iter or dx must be defined")
 
         # Go through iterations of Eulers method
@@ -39,19 +42,19 @@ class DifferentialEquation:
         return z
 
 
-# Differential function
-def func(x: float, y: float) -> float:
-    from math import log as ln
-
-    return y * (x * ln(x))
-
-
 # Main
 def main():
+    """Does eulers method and prints results."""
     # Inputs
     x0, y0 = 1, 4
     x1 = 2
     iter_count = 10000000
+
+    def func(x: float, y: float) -> float:
+        """Differential equation used in the program"""
+        from math import log as ln
+
+        return y * (x * ln(x))
 
     # Solve
     de = DifferentialEquation(func)

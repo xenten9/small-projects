@@ -6,6 +6,7 @@ import string
 keywords = ('#')
 
 
+# Grabs questions and answers from a poorly formatted document
 def main():
     # Get file contents
     file = open("text.txt", "r")

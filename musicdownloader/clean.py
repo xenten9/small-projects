@@ -1,5 +1,6 @@
 from os import getcwd, path, remove, listdir
 
+# Get main path
 main_path = getcwd()
 if main_path[-6:] != 'loader':
     main_path = path.join(main_path, 'music downloader')
@@ -8,6 +9,7 @@ if main_path[-6:] != 'loader':
 music_path = path.join(main_path, 'music')
 src_path = path.join(music_path, 'src')
 
+# Deletes all dowloaded videos
 for file in listdir(src_path):
     if file.endswith('.mp4'):
         try:

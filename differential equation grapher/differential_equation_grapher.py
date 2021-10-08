@@ -11,24 +11,38 @@ from PIL.Image import new as newimg
 
 # Differential Equation
 def f(x: float, y: float) -> float:
+    """Differential equation being used."""
     try:
-        #out = atan(x + y) + sin(x) + cos(y)
-        out = (x-y**2) / y
+        return sin(x) + cos(y) + atan(x+y)
     except (ZeroDivisionError, ValueError, RuntimeWarning):
         # Domain error
-        out = inf
-    return out
+        return inf
+
+def get_function_calculation(f) -> str:
+    """Used to pull the method out of a function method."""
+    string = getsource(f)
+    split = string.split("\n")
+    split.pop(0)
+    for part in split:
+        if "return " in part and "inf" not in part:
+            part = part.replace("    ", "")
+            part = part.removeprefix("return ")
+            part = part.replace("**", "^")
+            return part
+    raise RuntimeError("Unable to parse f(x, y)")
+
 
 
 # Converters
 def compress(v: float) -> float:
-    # Map from (-inf, inf) -> (-1, 1)
+    """Map from (-inf, inf) -> (-1, 1)."""
     if v == inf:
         return inf
     return (2 * atan(v)) / pi # faster
     #return 2/(1+exp(-v)) - 1 # slower
 
 def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
+    """"Map from (-1, 1) to [0, 255]."""
     if -1 <= v <= 1:
         # Map from (-1, 1) to [0, 255]
         new_v = int(abs(255 * v))
@@ -48,6 +62,7 @@ def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
         return c_inf
 
 def convert_to_rgb(color: Tuple[float, float, float]) -> tuple:
+    """Convert from ([0, 1), [0, 1), [0, 1)) to ([0, 255], [0, 255], [0, 255])."""
     red = ceil(color[0] * 255)
     green = ceil(color[1] * 255)
     blue = ceil(color[2] * 255)
@@ -56,12 +71,14 @@ def convert_to_rgb(color: Tuple[float, float, float]) -> tuple:
 
 # Euler methods
 def eulers_method(pos: tuple, dx: float) -> tuple:
+    """Use the position and dx to calculate the new value using eulers method."""
     # Approximate new position given an initial position and dx
     pos = (pos[0] + dx, pos[1] + dx * f(pos[0], pos[1]))
     return pos
 
 def create_euler_line(pos: tuple, dx: float, h_bounds: tuple,
                       v_bounds: tuple, iterlimit: int) -> dict:
+    """Creates an euler line."""
     # create euler line throuhg the graph
     px = [pos[0]]
     py = [pos[1]]
@@ -109,6 +126,7 @@ def create_euler_line(pos: tuple, dx: float, h_bounds: tuple,
 
 # Helper functions
 def make_domain(domain: tuple, interval: float) -> list:
+    """Create a domain using a start and end point and an interval."""
     # Make a list of x values
     z = list(range(floor(domain[0] / interval), ceil(domain[1] / interval), 1))
     z = [element * interval for element in z]
@@ -119,6 +137,7 @@ def make_domain(domain: tuple, interval: float) -> list:
     return q
 
 def spow(x: float, n: float) -> float:
+    """Returns x to the power of n with the sign of x."""
     x = abs(x)**n * sign(x)
     return x
 
@@ -151,7 +170,7 @@ def main():
     iterlimit = 40000000
 
     # Image
-    de_image = newimg("RGB", size, "#ffffff")
+    de_image = newimg("RGB", size, (255, 255, 255))
 
     # Iterate over image
     for y in range(0, size[1]):
@@ -178,7 +197,7 @@ def main():
     ax.axvline(0, c = (1, 1, 1))
 
     # Get function definition
-    func_string = getsource(f)
+    func_string = get_function_calculation(f)
     split = func_string.split('\n')
     for part in split:
         if 'return ' in part and 'inf' not in part:
