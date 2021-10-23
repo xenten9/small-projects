@@ -1,13 +1,20 @@
 # Standard Library
 from inspect import getsource
-from math import atan, ceil, cos, e, floor, inf, nan, pi, sin
-from typing import Tuple
+from math import atan, ceil, cos, e, floor, inf, pi, sin
+from typing import Callable, Tuple
 
 # External Libraries
 from matplotlib import pyplot as plot
 from numpy import linspace, sign
 from PIL.Image import new as newimg
 
+# Constants
+Color = tuple[int, int, int]
+C_MAJOR = (0.8, 0.8, 0.8)
+C_POS = (0.5, 1, 0)
+C_NEG = (1, 0.1, 0.1)
+C_INF = (255, 51, 255)
+C_EULER = (0.25, 0.25, 1)
 
 # Differential Equation
 def f(x: float, y: float) -> float:
@@ -18,7 +25,7 @@ def f(x: float, y: float) -> float:
         # Domain error
         return inf
 
-def get_function_calculation(f) -> str:
+def get_function_calculation(f: Callable[[float, float], float]) -> str:
     """Used to pull the method out of a function method."""
     string = getsource(f)
     split = string.split("\n")
@@ -41,7 +48,7 @@ def compress(v: float) -> float:
     return (2 * atan(v)) / pi # faster
     #return 2/(1+exp(-v)) - 1 # slower
 
-def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
+def value_to_rgb(v: float) -> Color:
     """"Map from (-1, 1) to [0, 255]."""
     if -1 <= v <= 1:
         # Map from (-1, 1) to [0, 255]
@@ -49,19 +56,19 @@ def value_to_rgb(v: float, c_neg: tuple, c_pos: tuple, c_inf: tuple) -> tuple:
 
         if v < 0:
             # negative
-            red = floor(c_neg[0] * new_v)
-            green = floor(c_neg[1] * new_v)
-            blue = floor(c_neg[2] * new_v)
+            red = floor(C_NEG[0] * new_v)
+            green = floor(C_NEG[1] * new_v)
+            blue = floor(C_NEG[2] * new_v)
         else:
             # positive
-            red = floor(c_pos[0] * new_v)
-            green = floor(c_pos[1] * new_v)
-            blue = floor(c_pos[2] * new_v)
+            red = floor(C_POS[0] * new_v)
+            green = floor(C_POS[1] * new_v)
+            blue = floor(C_POS[2] * new_v)
         return (red, green, blue)
     else:
-        return c_inf
+        return C_INF
 
-def convert_to_rgb(color: Tuple[float, float, float]) -> tuple:
+def convert_to_rgb(color: Tuple[float, float, float]) -> Color:
     """Convert from ([0, 1), [0, 1), [0, 1)) to ([0, 255], [0, 255], [0, 255])."""
     red = ceil(color[0] * 255)
     green = ceil(color[1] * 255)
@@ -70,14 +77,14 @@ def convert_to_rgb(color: Tuple[float, float, float]) -> tuple:
 
 
 # Euler methods
-def eulers_method(pos: tuple, dx: float) -> tuple:
+def eulers_method(pos: tuple[float, float], dx: float) -> tuple[float, float]:
     """Use the position and dx to calculate the new value using eulers method."""
     # Approximate new position given an initial position and dx
     pos = (pos[0] + dx, pos[1] + dx * f(pos[0], pos[1]))
     return pos
 
-def create_euler_line(pos: tuple, dx: float, h_bounds: tuple,
-                      v_bounds: tuple, iterlimit: int) -> dict:
+def create_euler_line(pos: tuple[float, float], dx: float, h_bounds: tuple[float, float],
+                      v_bounds: tuple[float, float], iterlimit: int) -> dict[str, list[float]]:
     """Creates an euler line."""
     # create euler line throuhg the graph
     px = [pos[0]]
@@ -125,12 +132,12 @@ def create_euler_line(pos: tuple, dx: float, h_bounds: tuple,
 
 
 # Helper functions
-def make_domain(domain: tuple, interval: float) -> list:
+def make_domain(domain: tuple[float, float], interval: float) -> list[float]:
     """Create a domain using a start and end point and an interval."""
     # Make a list of x values
     z = list(range(floor(domain[0] / interval), ceil(domain[1] / interval), 1))
     z = [element * interval for element in z]
-    q = []
+    q: list[float] = []
     for element in z:
         if (domain[0] < element < domain[1]):
             q.append(element)
@@ -152,17 +159,10 @@ def main():
     vbounds = (-8 * pi, 8 * pi)
 
     # Lines
-    hpoints = linspace(hbounds[0], hbounds[1], size[0])
-    vpoints = linspace(vbounds[0], vbounds[1], size[1])
+    hpoints: list[float] = linspace(hbounds[0], hbounds[1], size[0]) # type: ignore
+    vpoints: list[float] = linspace(vbounds[0], vbounds[1], size[1]) # type: ignore
     hmajlines = make_domain(hbounds, majspacing)
     vmajlines = make_domain(vbounds, majspacing)
-
-    # Colors
-    c_major = (0.8, 0.8, 0.8)
-    c_pos = (0.5, 1, 0)
-    c_neg = (1, 0.1, 0.1)
-    c_inf = convert_to_rgb((1, 0.2, 1))
-    c_euler = (0.25, 0.25, 1)
 
     # Euler line
     pos = (1, 1)
@@ -177,7 +177,7 @@ def main():
         #print("y: " + str(y))
         for x in range(0, size[0]):
             v = compress(f(hpoints[x], vpoints[y]))
-            de_image.putpixel((x, -(y + 1)), value_to_rgb(v, c_neg, c_pos, c_inf))
+            de_image.putpixel((x, -(y + 1)), value_to_rgb(v))
     print("Image Created")
 
     # Setup plot
@@ -190,7 +190,7 @@ def main():
     # Plot major ticks
     ax.set_xticks(hmajlines)
     ax.set_yticks(vmajlines)
-    ax.grid(True, which = "major", c = c_major)
+    ax.grid(True, which = "major", c = C_MAJOR)
 
     # Origin lines
     ax.axhline(0, c = (1, 1, 1))
@@ -214,7 +214,7 @@ def main():
     # Creat euler line
     euler_line = create_euler_line(pos, dx, hbounds, vbounds, iterlimit)
     print("Euler line created")
-    ax.plot(euler_line['x'], euler_line['y'], color = c_euler,
+    ax.plot(euler_line['x'], euler_line['y'], color = C_EULER,
             label = "Trends starting at: " + str(pos))
 
     # Finish plotting
