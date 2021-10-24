@@ -14,7 +14,7 @@ def main():
     file.close()
 
     # Remove keywords markers
-    new_lines = []
+    new_lines: list[str] = []
     for line in lines:
         if any(keyword in line for keyword in keywords):
             print(f"IGNORE: {line}")

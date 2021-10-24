@@ -23,15 +23,11 @@ class DifferentialEquation:
         raise RuntimeError("Unable to parse f(x, y)")
 
     def eulers_method(
-        self, x0: float, x1: float, y0: float, dx: float = None, iter: int = None
+        self, x0: float, x1: float, y0: float, iter: int
     ) -> List[Tuple[float, float]]:
         """Returns a list of points from eulers method."""
-        if isinstance(dx, float):
-            iter = round((x1 - x0) / dx)
-        if isinstance(iter, int):
-            dx = (x1 - x0) / iter
-        if not dx and not iter:
-            raise ValueError("either iter or dx must be defined")
+        # Get the change in x
+        dx: float = (x1 - x0) / iter
 
         # Go through iterations of Eulers method
         z = [(x0, y0)]
